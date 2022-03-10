@@ -11,15 +11,16 @@
         "folder": {
             "help": "The folder path for the keystore(s) and deposit(s). Pointing to `./validator_keys` by default."
         },
+        "request_id": {
+            "help": "The request id for this request to the CLI.  Generates fresh UUID by default"
+        },
         "chain": {
             "help": "The name of Ethereum PoS chain you are targeting. Use \"mainnet\" if you are depositing ETH",
             "prompt": "Please choose the (mainnet or testnet) network/chain name"
         },
         "keystore_password": {
             "help": "The password that will secure your keystores. You will need to re-enter this to decrypt them when you setup your Ethereum validators. (It is recommended not to use this argument, and wait for the CLI to ask you for your mnemonic as otherwise it will appear in your shell history.)",
-            "prompt": "Create a password that secures your validator keystore(s). You will need to re-enter this to decrypt them when you setup your Ethereum validators.",
-            "confirm": "Repeat your keystore password for confirmation",
-            "mismatch": "Error: the two entered values do not match. Please type again."
+            "prompt": "Create a password that secures your validator keystore(s). You will need to re-enter this to decrypt them when you setup your Ethereum validators."
         },
         "eth1_withdrawal_address": {
             "help": "If this field is set and valid, the given Eth1 address will be used to create the withdrawal credentials. Otherwise, it will generate withdrawal credentials with the mnemonic-derived withdrawal public key."

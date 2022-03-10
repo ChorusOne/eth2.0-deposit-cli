@@ -1,6 +1,7 @@
 import os
 import click
 import json
+import uuid
 from typing import (
     Any,
     Callable,
@@ -61,7 +62,7 @@ def build_seed_dict( seed: str) -> Dict[str, str]:
   
 def save_seed( seed: str, folder: str) -> None:
         seed_dict = build_seed_dict(seed)
-        folder =os.path.join(folder, "mnemonic")
+        folder = os.path.join(folder, "mnemonic")
         if not os.path.exists(folder):
             os.makedirs(folder)
         folder = os.path.join(folder,"seed.json")
@@ -90,6 +91,11 @@ def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[
             type=click.Path(exists=True, file_okay=False, dir_okay=True),
         ),
         jit_option(
+            default=uuid.uuid4(),
+            help=lambda: load_text(['request_id', 'help'], func='generate_keys_arguments_decorator'),
+            param_decls='--request_id',
+        ),
+        jit_option(
             callback=captive_prompt_callback(
                 lambda x: closest_match(x, list(ALL_CHAINS.keys())),
                 choice_prompt_func(
@@ -106,17 +112,17 @@ def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[
             ),
         ),
         jit_option(
-            callback=captive_prompt_callback(
-                validate_password_strength,
-                lambda:load_text(['keystore_password', 'prompt'], func='generate_keys_arguments_decorator'),
-                lambda:load_text(['keystore_password', 'confirm'], func='generate_keys_arguments_decorator'),
-                lambda: load_text(['keystore_password', 'mismatch'], func='generate_keys_arguments_decorator'),
-                True,
-            ),
+            # callback=captive_prompt_callback(
+            #     validate_password_strength,
+            #     lambda:load_text(['keystore_password', 'prompt'], func='generate_keys_arguments_decorator'),
+            #     # lambda:load_text(['keystore_password', 'confirm'], func='generate_keys_arguments_decorator'),
+            #     # lambda: load_text(['keystore_password', 'mismatch'], func='generate_keys_arguments_decorator'),
+            #     True,
+            # ),
             help=lambda: load_text(['keystore_password', 'help'], func='generate_keys_arguments_decorator'),
             hide_input=True,
             param_decls='--keystore_password',
-            prompt=lambda: load_text(['keystore_password', 'prompt'], func='generate_keys_arguments_decorator'),
+            # prompt=lambda: load_text(['keystore_password', 'prompt'], func='generate_keys_arguments_decorator'),
         ),
         jit_option(
             callback=validate_eth1_withdrawal_address,
@@ -137,8 +143,9 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
                   eth1_withdrawal_address: HexAddress, **kwargs: Any) -> None:
     mnemonic = ctx.obj['mnemonic']
     mnemonic_password = ctx.obj['mnemonic_password']
+    request_id = ctx.obj['request_id']
     amounts = [MAX_DEPOSIT_AMOUNT] * num_validators
-    folder = os.path.join(folder, DEFAULT_VALIDATOR_KEYS_FOLDER_NAME)
+    folder = os.path.join(folder, DEFAULT_VALIDATOR_KEYS_FOLDER_NAME,request_id)
     chain_setting = get_chain_setting(chain)
     if not os.path.exists(folder):
         os.mkdir(folder)
@@ -162,4 +169,4 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
     if not verify_deposit_data_json(deposits_file, credentials.credentials):
         raise ValidationError(load_text(['err_verify_deposit']))
     click.echo(load_text(['msg_creation_success']) + folder)
-    click.pause(load_text(['msg_pause']))
+    # click.pause(load_text(['msg_pause']))

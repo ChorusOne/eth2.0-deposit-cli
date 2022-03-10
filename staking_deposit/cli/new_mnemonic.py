@@ -35,21 +35,21 @@ languages = get_first_options(MNEMONIC_LANG_OPTIONS)
 )
 @click.pass_context
 @jit_option(
-    callback=captive_prompt_callback(
-        lambda mnemonic_language: fuzzy_reverse_dict_lookup(mnemonic_language, MNEMONIC_LANG_OPTIONS),
-        choice_prompt_func(lambda: load_text(['arg_mnemonic_language', 'prompt'], func='new_mnemonic'), languages),
-    ),
+    # callback=captive_prompt_callback(
+    #     lambda mnemonic_language: fuzzy_reverse_dict_lookup(mnemonic_language, MNEMONIC_LANG_OPTIONS),
+    #     choice_prompt_func(lambda: load_text(['arg_mnemonic_language', 'prompt'], func='new_mnemonic'), languages),
+    # ),
     default=lambda: load_text(['arg_mnemonic_language', 'default'], func='new_mnemonic'),
     help=lambda: load_text(['arg_mnemonic_language', 'help'], func='new_mnemonic'),
     param_decls='--mnemonic_language',
-    prompt=choice_prompt_func(lambda: load_text(['arg_mnemonic_language', 'prompt'], func='new_mnemonic'), languages),
+    # prompt=choice_prompt_func(lambda: load_text(['arg_mnemonic_language', 'prompt'], func='new_mnemonic'), languages),
 )
 @generate_keys_arguments_decorator
-def new_mnemonic(ctx: click.Context, mnemonic_language: str, **kwargs: Any) -> None:
+def new_mnemonic(ctx: click.Context, mnemonic_language: str, request_id: str, **kwargs: Any) -> None:
     mnemonic = get_mnemonic(language=mnemonic_language, words_path=WORD_LISTS_PATH)
     test_mnemonic = ''
     click.clear()
     # Do NOT use mnemonic_password.
-    ctx.obj = {'mnemonic': mnemonic, 'mnemonic_password': ''}
+    ctx.obj = {'mnemonic': mnemonic, 'mnemonic_password': '', 'request_id': request_id}
     ctx.params['validator_start_index'] = 0
     ctx.forward(generate_keys)
