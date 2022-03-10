@@ -147,9 +147,9 @@ class Credential:
         secret = self.signing_sk.to_bytes(32, 'big')
         return ScryptKeystore.encrypt(secret=secret, password=password, path=self.signing_key_path)
 
-    def save_signing_keystore(self, password: str, folder: str) -> str:
+    def save_signing_keystore(self, password: str, folder: str, index:int) -> str:
         keystore = self.signing_keystore(password)
-        filefolder = os.path.join(folder, 'keystore-%s-%i.json' % (keystore.path.replace('/', '_'), time.time()))
+        filefolder = os.path.join(folder, 'keystore-%i.json' % index)
         keystore.save(filefolder)
         return filefolder
 
@@ -191,7 +191,8 @@ class CredentialList:
     def export_keystores(self, password: str, folder: str) -> List[str]:
         with click.progressbar(self.credentials, label=load_text(['msg_keystore_creation']),
                                show_percent=False, show_pos=True) as credentials:
-            return [credential.save_signing_keystore(password=password, folder=folder) for credential in credentials]
+            # Enumerate credentials so that keystores can be saved against their index.  Use 1-based indexing
+            return [ credential.save_signing_keystore(password=password, folder=folder,index=index+1) for (index,credential) in enumerate(credentials)]
 
     def export_deposit_data_json(self, folder: str) -> str:
         with click.progressbar(self.credentials, label=load_text(['msg_depositdata_creation']),
