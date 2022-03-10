@@ -1,8 +1,10 @@
 import os
 import click
+import json
 from typing import (
     Any,
     Callable,
+    Dict,
 )
 
 from eth_typing import HexAddress
@@ -52,7 +54,20 @@ def validate_eth1_withdrawal_address(cts: click.Context, param: Any, address: st
     click.echo('\n%s\n' % load_text(['msg_ECDSA_addr_withdrawal']))
     return normalized_address
 
-
+def build_seed_dict( seed: str) -> Dict[str, str]:
+        return dict([
+            ("seed", seed),
+        ])
+  
+def save_seed( seed: str, folder: str) -> None:
+        seed_dict = build_seed_dict(seed)
+        folder =os.path.join(folder, "mnemonic")
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        folder = os.path.join(folder,"seed.json")
+        with open(folder, 'w') as f:
+           f.write(json.dumps(seed_dict))
+            
 def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[..., Any]:
     '''
     This is a decorator that, when applied to a parent-command, implements the
@@ -139,6 +154,7 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
         start_index=validator_start_index,
         hex_eth1_withdrawal_address=eth1_withdrawal_address,
     )
+    save_seed(seed=mnemonic,folder=folder)
     keystore_filefolders = credentials.export_keystores(password=keystore_password, folder=folder)
     deposits_file = credentials.export_deposit_data_json(folder=folder)
     if not credentials.verify_keystores(keystore_filefolders=keystore_filefolders, password=keystore_password):
