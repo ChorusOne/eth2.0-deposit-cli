@@ -148,7 +148,7 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
     folder = os.path.join(folder, DEFAULT_VALIDATOR_KEYS_FOLDER_NAME,request_id)
     chain_setting = get_chain_setting(chain)
     if not os.path.exists(folder):
-        os.mkdir(folder)
+        os.makedirs(folder)
     click.clear()
     click.echo(RHINO_0)
     click.echo(load_text(['msg_key_creation']))
