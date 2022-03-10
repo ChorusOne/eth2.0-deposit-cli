@@ -54,11 +54,6 @@ def validate_mnemonic(ctx: click.Context, param: Any, mnemonic: str) -> str:
     prompt=False,
 )
 @jit_option(
-    callback=captive_prompt_callback(
-        lambda num: validate_int_range(num, 0, 2**32),
-        lambda: load_text(['arg_validator_start_index', 'prompt'], func='existing_mnemonic'),
-        lambda: load_text(['arg_validator_start_index', 'confirm'], func='existing_mnemonic'),
-    ),
     default=0,
     help=lambda: load_text(['arg_validator_start_index', 'help'], func='existing_mnemonic'),
     param_decls="--validator_start_index",
@@ -66,7 +61,7 @@ def validate_mnemonic(ctx: click.Context, param: Any, mnemonic: str) -> str:
 )
 @generate_keys_arguments_decorator
 @click.pass_context
-def existing_mnemonic(ctx: click.Context, mnemonic: str, mnemonic_password: str, **kwargs: Any) -> None:
+def existing_mnemonic(ctx: click.Context, mnemonic: str, mnemonic_password: str, request_id: str, **kwargs: Any) -> None:
     ctx.obj = {} if ctx.obj is None else ctx.obj  # Create a new ctx.obj if it doesn't exist
-    ctx.obj.update({'mnemonic': mnemonic, 'mnemonic_password': mnemonic_password})
+    ctx.obj.update({'mnemonic': mnemonic, 'mnemonic_password': mnemonic_password, 'request_id': request_id})
     ctx.forward(generate_keys)
