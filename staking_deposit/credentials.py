@@ -1,4 +1,6 @@
 import os
+from dataclasses import asdict
+
 import click
 from enum import Enum
 import time
@@ -31,8 +33,6 @@ from staking_deposit.utils.ssz import (
     DepositData,
     DepositMessage,
 )
-
-
 class WithdrawalType(Enum):
     BLS_WITHDRAWAL = 0
     ETH1_ADDRESS_WITHDRAWAL = 1
@@ -147,14 +147,34 @@ class Credential:
         secret = self.signing_sk.to_bytes(32, 'big')
         return ScryptKeystore.encrypt(secret=secret, password=password, path=self.signing_key_path)
 
+    def assure_folder(self,folder:str, type:str) -> str:
+        if not os.path.exists(folder):
+            print(f'{type} folder {folder} does not exist, creating...')
+            os.makedirs(folder)
+        return folder
+
+    def save_pk(self, filefolder: str, pk: Dict[str,bytes]) -> None:
+        """
+        Save private key as JSON .
+        """
+        with open(filefolder, 'w') as f:
+            f.write(json.dumps(pk))
+
+    def build_pk_dict(self, pk: bytes) -> Dict[str, bytes]:
+        return dict([
+            ("private_key", pk.hex()),
+        ])
+
+
+
     def save_signing_keystore(self, password: str, folder: str, index:int) -> str:
         keystore = self.signing_keystore(password)
-        folder = os.path.join(folder,'keystores',str(index))
-        if not os.path.exists(folder):
-            print(f'Keystore folder {folder} does not exist, creating...')
-            os.makedirs(folder)
-        pubkey = self.signing_pk.hex()
-        keystore_file = os.path.join(folder, f'{self.signing_pk.hex()}.json')
+        keystore_folder = self.assure_folder(os.path.join(folder,'keystores',str(index)), "keystore")
+        private_key_folder = self.assure_folder(os.path.join(folder,'private-keys',str(index)), "private_key")
+        private_key = self.signing_sk.to_bytes(32, 'big')
+        keystore_file = os.path.join(keystore_folder, f'{self.signing_pk.hex()}.json')
+        private_key_file = os.path.join(private_key_folder, f'{self.signing_pk.hex()}.json')
+        self.save_pk(private_key_file,self.build_pk_dict(private_key))
         keystore.save(keystore_file)
         return keystore_file
 
