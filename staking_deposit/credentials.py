@@ -149,9 +149,14 @@ class Credential:
 
     def save_signing_keystore(self, password: str, folder: str, index:int) -> str:
         keystore = self.signing_keystore(password)
-        filefolder = os.path.join(folder, 'keystore-%i.json' % index)
-        keystore.save(filefolder)
-        return filefolder
+        folder = os.path.join(folder,'keystores',str(index))
+        if not os.path.exists(folder):
+            print(f'Keystore folder {folder} does not exist, creating...')
+            os.makedirs(folder)
+        pubkey = self.signing_pk.hex()
+        keystore_file = os.path.join(folder, f'{self.signing_pk.hex()}.json')
+        keystore.save(keystore_file)
+        return keystore_file
 
     def verify_keystore(self, keystore_filefolder: str, password: str) -> bool:
         saved_keystore = Keystore.from_file(keystore_filefolder)
@@ -191,8 +196,7 @@ class CredentialList:
     def export_keystores(self, password: str, folder: str) -> List[str]:
         with click.progressbar(self.credentials, label=load_text(['msg_keystore_creation']),
                                show_percent=False, show_pos=True) as credentials:
-            # Enumerate credentials so that keystores can be saved against their index.  Use 1-based indexing
-            return [ credential.save_signing_keystore(password=password, folder=folder,index=index+1) for (index,credential) in enumerate(credentials)]
+            return [ credential.save_signing_keystore(password=password, folder=folder,index=index) for (index,credential) in enumerate(credentials)]
 
     def export_deposit_data_json(self, folder: str) -> str:
         with click.progressbar(self.credentials, label=load_text(['msg_depositdata_creation']),
