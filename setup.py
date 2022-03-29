@@ -9,6 +9,7 @@ setup(
     version='2.0.0',
     py_modules=["staking_deposit", "staking_deposit.deposit"],
     packages=find_packages(exclude=('tests', 'docs')),
+    package_data={'staking_deposit': ['intl/*', 'key_handling/key_derivation/word_lists/*']},
     python_requires=">=3.7,<4",
     # pin exact versions to prevent supply-chain attacks
     install_requires=[
