@@ -11,7 +11,6 @@ def resource_path(relative_path: str) -> str:
 
     deposit_cli_path = os.getenv('DEPOSIT_CLI_PATH')
     if deposit_cli_path != None:
-        print("DEPOSIT_CLI_PATH detected, searching files in: ", deposit_cli_path)
         return os.path.join(deposit_cli_path, 'lib/python3.8/site-packages', relative_path)
 
     try:
