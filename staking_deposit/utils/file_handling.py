@@ -8,6 +8,11 @@ def resource_path(relative_path: str) -> str:
     PyInstaller creates a temp folder and stores path in _MEIPASS which this function swaps
     into a resource path so it is available both when building binaries and running natively.
     """
+
+    deposit_cli_path = os.getenv('DEPOSIT_CLI_PATH')
+    if deposit_cli_path != None:
+        return os.path.join(deposit_cli_path, 'lib/python3.8/site-packages', relative_path)
+
     try:
         base_path = sys._MEIPASS  # type: ignore
     except Exception:
