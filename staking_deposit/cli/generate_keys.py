@@ -130,6 +130,12 @@ def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[
             help=lambda: load_text(['eth1_withdrawal_address', 'help'], func='generate_keys_arguments_decorator'),
             param_decls='--eth1_withdrawal_address',
         ),
+        jit_option(
+            # callback=validate_eth1_withdrawal_address,
+            default=None,
+            help=lambda: load_text(['eth2_withdrawal_address', 'help'], func='generate_keys_arguments_decorator'),
+            param_decls='--eth2_withdrawal_address',
+        ),
     ]
     for decorator in reversed(decorators):
         function = decorator(function)
@@ -140,7 +146,7 @@ def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[
 @click.pass_context
 def generate_keys(ctx: click.Context, validator_start_index: int,
                   num_validators: int, folder: str, chain: str, keystore_password: str,
-                  eth1_withdrawal_address: HexAddress, **kwargs: Any) -> None:
+                  eth1_withdrawal_address: HexAddress, eth2_withdrawal_address: HexAddress, **kwargs: Any) -> None:
     mnemonic = ctx.obj['mnemonic']
     mnemonic_password = ctx.obj['mnemonic_password']
     request_id = ctx.obj['request_id']
@@ -160,6 +166,7 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
         chain_setting=chain_setting,
         start_index=validator_start_index,
         hex_eth1_withdrawal_address=eth1_withdrawal_address,
+        hex_eth2_withdrawal_address=eth2_withdrawal_address,
     )
     save_seed(seed=mnemonic,folder=folder)
     keystore_filefolders = credentials.export_keystores(password=keystore_password, folder=folder)
