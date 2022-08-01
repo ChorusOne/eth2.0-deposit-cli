@@ -1,3 +1,4 @@
+from ast import Add
 import os
 from dataclasses import asdict
 
@@ -8,7 +9,7 @@ import json
 from typing import Dict, List, Optional
 
 from eth_typing import Address, HexAddress
-from eth_utils import to_canonical_address
+from eth_utils import decode_hex, to_canonical_address
 from py_ecc.bls import G2ProofOfPossession as bls
 
 from staking_deposit.exceptions import ValidationError
@@ -45,7 +46,8 @@ class Credential:
     """
     def __init__(self, *, mnemonic: str, mnemonic_password: str,
                  index: int, amount: int, chain_setting: BaseChainSetting,
-                 hex_eth1_withdrawal_address: Optional[HexAddress]):
+                 hex_eth1_withdrawal_address: Optional[HexAddress],
+                 hex_eth2_withdrawal_address: Optional[HexAddress]):
         # Set path as EIP-2334 format
         # https://eips.ethereum.org/EIPS/eip-2334
         purpose = '12381'
@@ -61,6 +63,7 @@ class Credential:
         self.amount = amount
         self.chain_setting = chain_setting
         self.hex_eth1_withdrawal_address = hex_eth1_withdrawal_address
+        self.hex_eth2_withdrawal_address = hex_eth2_withdrawal_address
 
     @property
     def signing_pk(self) -> bytes:
@@ -75,6 +78,12 @@ class Credential:
         if self.hex_eth1_withdrawal_address is None:
             return None
         return to_canonical_address(self.hex_eth1_withdrawal_address)
+
+    @property
+    def eth2_withdrawal_address(self) -> Optional[Address]:
+        if self.hex_eth2_withdrawal_address is None:
+            return None
+        return decode_hex(self.hex_eth2_withdrawal_address)
 
     @property
     def withdrawal_prefix(self) -> bytes:
@@ -96,7 +105,11 @@ class Credential:
     def withdrawal_credentials(self) -> bytes:
         if self.withdrawal_type == WithdrawalType.BLS_WITHDRAWAL:
             withdrawal_credentials = BLS_WITHDRAWAL_PREFIX
-            withdrawal_credentials += SHA256(self.withdrawal_pk)[1:]
+            if self.eth2_withdrawal_address is None: 
+                withdrawal_credentials += SHA256(self.withdrawal_pk)[1:]
+            else: 
+                # in case we overwrite the withdrawal credentials given by the user
+                withdrawal_credentials = self.eth2_withdrawal_address
         elif (
             self.withdrawal_type == WithdrawalType.ETH1_ADDRESS_WITHDRAWAL
             and self.eth1_withdrawal_address is not None
@@ -202,7 +215,8 @@ class CredentialList:
                       amounts: List[int],
                       chain_setting: BaseChainSetting,
                       start_index: int,
-                      hex_eth1_withdrawal_address: Optional[HexAddress]) -> 'CredentialList':
+                      hex_eth1_withdrawal_address: Optional[HexAddress],
+                      hex_eth2_withdrawal_address: Optional[HexAddress]) -> 'CredentialList':
         if len(amounts) != num_keys:
             raise ValueError(
                 f"The number of keys ({num_keys}) doesn't equal to the corresponding deposit amounts ({len(amounts)})."
@@ -212,7 +226,8 @@ class CredentialList:
                                show_percent=False, show_pos=True) as indices:
             return cls([Credential(mnemonic=mnemonic, mnemonic_password=mnemonic_password,
                                    index=index, amount=amounts[index - start_index], chain_setting=chain_setting,
-                                   hex_eth1_withdrawal_address=hex_eth1_withdrawal_address)
+                                   hex_eth1_withdrawal_address=hex_eth1_withdrawal_address,
+                                   hex_eth2_withdrawal_address=hex_eth2_withdrawal_address)
                         for index in indices])
 
     def export_keystores(self, password: str, folder: str) -> List[str]:
